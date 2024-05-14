@@ -1,0 +1,9 @@
+{
+    "cmake.configureOnOpen": false,
+    "files.associations": {
+        "*.yarnproject": "jsonc",
+        "cstddef": "cpp",
+        "common.h": "c",
+        "trafficlight.h": "c"
+    }
+}

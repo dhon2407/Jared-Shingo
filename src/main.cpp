@@ -12,6 +12,5 @@ void setup()
 
 void loop()
 {
-  delay(10*1000);
-  traffic_light_stop();
+  
 }

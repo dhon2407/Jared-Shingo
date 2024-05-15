@@ -1,6 +1,7 @@
 #include <Arduino.h>
 
 #include "trafficlight.h"
+#include "common_functions.h"
 
 #define ON(light)   digitalWrite(light, HIGH)
 #define OFF(light)  digitalWrite(light, LOW)
@@ -35,6 +36,7 @@ typedef struct
 static traffic_state_t g_current_state = UNKNOWN;
 static volatile bool traffic_light_running = false;
 static TaskHandle_t main_taskHandle;
+static blink_handle_t *blinkingPedWalkHandle = NULL;
 
 static void start_CARS_GO(void);
 static void start_CARS_STOPPING(void);
@@ -226,13 +228,15 @@ void start_PED_STOPPING(void)
     OFF(LED_CAR_YELLOW);
     ON(LED_CAR_RED);
     OFF(LED_PED_RED);
-    ON(LED_PED_GREEN);
+
+    start_blink(LED_PED_GREEN, 300, &blinkingPedWalkHandle);
 }
 void start_PED_STOP(void)
 {
     OFF(LED_CAR_GREEN);
     OFF(LED_CAR_YELLOW);
     ON(LED_CAR_RED);
+
     ON(LED_PED_RED);
-    OFF(LED_PED_GREEN);
+    stop_blink(blinkingPedWalkHandle);
 }

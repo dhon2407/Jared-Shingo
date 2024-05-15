@@ -7,8 +7,10 @@
 extern "C" {
 #endif
 
-void start_blink(uint8_t light, uint32_t duration, TaskHandle_t *handle);
-void stop_blink(TaskHandle_t handle);
+typedef struct blink_handle blink_handle_t;
+
+void start_blink(uint8_t light, uint32_t duration, blink_handle_t **handle);
+void stop_blink(blink_handle_t *handle);
 
 #ifdef __cplusplus
 }

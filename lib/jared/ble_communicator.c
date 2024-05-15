@@ -4,7 +4,7 @@
 #include "ble_communicator.h"
 #include "common_functions.h"
 
-static TaskHandle_t connectionBlinkHandle = NULL;
+static blink_handle_t *connectionBlinkHandle = NULL;
 
 static void ble_connectingMode(void);
 

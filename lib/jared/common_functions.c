@@ -4,9 +4,6 @@
 
 #define MAX_BLINKING_COUNT 10
 
-#define ON(light) digitalWrite(light, HIGH)
-#define OFF(light) digitalWrite(light, LOW)
-
 #define BLINKLIGHT(light, duration) \
     ON(light); \
     vTaskDelay(duration / portTICK_PERIOD_MS); \
@@ -29,7 +26,7 @@ typedef struct
 } blinking_data_t;
 
 
-static blinking_data_t blinklink_list[10] =
+static blinking_data_t blinklink_list[] =
 {
     { "blinking01", 0, { -1, NULL }, 0U, false },
     { "blinking02", 0, { -1, NULL }, 0U, false },
@@ -50,7 +47,6 @@ static void blinkLight_execute_task(void *blinkParam);
 
 void start_blink(uint8_t light, uint32_t duration, blink_handle_t **handle)
 {
-    size_t index = 0U;
     size_t list_size = sizeof(blinklink_list) / sizeof(blinklink_list[0]);
     blinking_data_t *blink_data = NULL;
 
@@ -91,7 +87,6 @@ void start_blink(uint8_t light, uint32_t duration, blink_handle_t **handle)
 
 void stop_blink(blink_handle_t *handle)
 {
-    size_t index = 0U;
     size_t list_size = sizeof(blinklink_list) / sizeof(blinklink_list[0]);
 
     if (handle->index >= list_size)

@@ -3,6 +3,9 @@
 
 #include <Arduino.h>
 
+#define ON(light) digitalWrite(light, HIGH)
+#define OFF(light) digitalWrite(light, LOW)
+
 #ifdef __cplusplus
 extern "C" {
 #endif

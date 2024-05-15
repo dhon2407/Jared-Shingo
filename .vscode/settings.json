@@ -5,6 +5,9 @@
         "cstddef": "cpp",
         "common.h": "c",
         "trafficlight.h": "c",
-        "algorithm": "c"
+        "algorithm": "c",
+        "bledevice.h": "c",
+        "arduino.h": "c",
+        "common_functions.h": "c"
     }
 }

@@ -79,10 +79,10 @@ void start_blink(uint8_t light, uint32_t duration, task_handle_t **handle)
 
     if (blinkListMutex == NULL)
     {
-        blinkListMutex = xSemaphoreCreateMutex();
+        MUTEX_INIT(blinkListMutex);
     }
 
-    xSemaphoreTake(blinkListMutex, portMAX_DELAY);
+    MUTEX_LOCK(blinkListMutex);
     for (size_t index = 0; index < list_size; index++)
     {
         if (blinklink_list[index].active == false && blinklink_list[index].handle.task == NULL)
@@ -98,7 +98,7 @@ void start_blink(uint8_t light, uint32_t duration, task_handle_t **handle)
     {
         //No available allocations
         *handle = NULL;
-        xSemaphoreGive(blinkListMutex);
+        MUTEX_UNLOCK(blinkListMutex);
         return;
     }
 
@@ -107,7 +107,7 @@ void start_blink(uint8_t light, uint32_t duration, task_handle_t **handle)
 
     xTaskCreate(blinkLight_execute_task, blink_data->taskName, 1000, blink_data, 1, &blink_data->handle.task);
 
-    xSemaphoreGive(blinkListMutex);
+    MUTEX_UNLOCK(blinkListMutex);
 
     return;
 }
@@ -124,10 +124,10 @@ void stop_blink(task_handle_t *handle)
 
     if (blinkListMutex == NULL)
     {
-        blinkListMutex = xSemaphoreCreateMutex();
+        MUTEX_INIT(blinkListMutex);
     }
 
-    xSemaphoreTake(blinkListMutex, portMAX_DELAY);
+    MUTEX_LOCK(blinkListMutex);
     if (blinklink_list[handle->index].active == true && 
         blinklink_list[handle->index].handle.task != NULL)
     {
@@ -136,7 +136,7 @@ void stop_blink(task_handle_t *handle)
         blinklink_list[handle->index].handle.task = NULL;
         blinklink_list[handle->index].handle.index = -1;
     }
-    xSemaphoreGive(blinkListMutex);
+    MUTEX_UNLOCK(blinkListMutex);
 
     return;
 }
@@ -149,10 +149,10 @@ void start_interval_action(actionCallback startAction, actionCallback endAction,
 
     if (intervalTaskListMutex == NULL)
     {
-        intervalTaskListMutex = xSemaphoreCreateMutex();
+        MUTEX_INIT(intervalTaskListMutex);
     }
 
-    xSemaphoreTake(intervalTaskListMutex, portMAX_DELAY);
+    MUTEX_LOCK(intervalTaskListMutex);
     for (size_t index = 0; index < list_size; index++)
     {
         if (intervalTask_list[index].active == false &&
@@ -169,7 +169,7 @@ void start_interval_action(actionCallback startAction, actionCallback endAction,
     {
         //No available allocations
         *handle = NULL;
-        xSemaphoreGive(intervalTaskListMutex);
+        MUTEX_UNLOCK(intervalTaskListMutex);
         return;
     }
 
@@ -179,7 +179,7 @@ void start_interval_action(actionCallback startAction, actionCallback endAction,
 
     xTaskCreate(execute_task_interval, interval_data->taskName, 1000, interval_data, 1, &interval_data->handle.task);
 
-    xSemaphoreGive(intervalTaskListMutex);
+    MUTEX_UNLOCK(intervalTaskListMutex);
 
     return;
 }
@@ -195,10 +195,10 @@ void stop_interval_action(task_handle_t *handle)
 
     if (intervalTaskListMutex == NULL)
     {
-        intervalTaskListMutex = xSemaphoreCreateMutex();
+        MUTEX_INIT(intervalTaskListMutex);
     }
 
-    xSemaphoreTake(intervalTaskListMutex, portMAX_DELAY);
+    MUTEX_LOCK(intervalTaskListMutex);
     if (intervalTask_list[handle->index].active == true && 
         intervalTask_list[handle->index].handle.task != NULL)
     {
@@ -207,7 +207,7 @@ void stop_interval_action(task_handle_t *handle)
         intervalTask_list[handle->index].handle.task = NULL;
         intervalTask_list[handle->index].handle.index = -1;
     }
-    xSemaphoreGive(intervalTaskListMutex);
+    MUTEX_UNLOCK(intervalTaskListMutex);
 
     return;
 }

@@ -6,6 +6,10 @@
 #define ON(light) digitalWrite(light, HIGH)
 #define OFF(light) digitalWrite(light, LOW)
 
+#define MUTEX_INIT(mutex) mutex = xSemaphoreCreateMutex()
+#define MUTEX_LOCK(mutex) xSemaphoreTake(mutex, portMAX_DELAY)
+#define MUTEX_UNLOCK(mutex) xSemaphoreGive(mutex)
+
 #ifdef __cplusplus
 extern "C" {
 #endif

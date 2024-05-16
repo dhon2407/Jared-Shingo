@@ -8,6 +8,7 @@ static volatile bool traffic_light_running = false;
 static TaskHandle_t main_taskHandle;
 static task_handle_t *blinkingPedWalkHandle = NULL;
 static task_handle_t *cautionModeHandle = NULL;
+static task_handle_t *jaredModeHandle = NULL;
 
 static SemaphoreHandle_t eventMutex = NULL;
 static volatile process_data_t current_data = { NO_EVENT, 0 };
@@ -22,23 +23,30 @@ static state_action_map_t start_actions[] =
     { PED_STOP,         start_PED_STOP },
     { CAUTION_MODE,     start_CAUTION_MODE },
     { OFF,              lights_all_off },
+    { JARED_MODE,       start_JARED_MODE },
 };
 
 static state_action_map_t end_actions[] =
 {
     { PED_STOPPING,     end_PED_STOPPING },
     { CAUTION_MODE,     end_CAUTION_MODE },
+    { JARED_MODE,       stop_JARED_MODE },
 };
 
 static state_event_map_t state_event_map[] =
 {
+    { OFF,              CARS_GO,        NORMAL_MODE_EVENT },
+
     { CARS_GO,          CAUTION_MODE,   CAUTION_MODE_EVENT },
     { CARS_STOPPING,    CAUTION_MODE,   CAUTION_MODE_EVENT },
     { CARS_STOP,        CAUTION_MODE,   CAUTION_MODE_EVENT },
     { PED_GO,           CAUTION_MODE,   CAUTION_MODE_EVENT },
     { PED_STOPPING,     CAUTION_MODE,   CAUTION_MODE_EVENT },
     { PED_STOP,         CAUTION_MODE,   CAUTION_MODE_EVENT },
+    { JARED_MODE,       CAUTION_MODE,   CAUTION_MODE_EVENT },
+    
     { CAUTION_MODE,     CARS_GO,        NORMAL_MODE_EVENT },
+    { JARED_MODE,       CARS_GO,        NORMAL_MODE_EVENT },
 
     { CARS_GO,          OFF,            TURNOFF_EVENT },
     { CARS_STOPPING,    OFF,            TURNOFF_EVENT },
@@ -47,8 +55,16 @@ static state_event_map_t state_event_map[] =
     { PED_STOPPING,     OFF,            TURNOFF_EVENT },
     { PED_STOP,         OFF,            TURNOFF_EVENT },
     { CAUTION_MODE,     OFF,            TURNOFF_EVENT },
+    { JARED_MODE,       OFF,            TURNOFF_EVENT },
 
-    { OFF,              CARS_GO,        NORMAL_MODE_EVENT },
+    { CARS_GO,          JARED_MODE,        JARED_MODE_EVENT },
+    { CARS_STOPPING,    JARED_MODE,        JARED_MODE_EVENT },
+    { CARS_STOP,        JARED_MODE,        JARED_MODE_EVENT },
+    { PED_GO,           JARED_MODE,        JARED_MODE_EVENT },
+    { PED_STOPPING,     JARED_MODE,        JARED_MODE_EVENT },
+    { PED_STOP,         JARED_MODE,        JARED_MODE_EVENT },
+    { CAUTION_MODE,     JARED_MODE,        JARED_MODE_EVENT },
+    { OFF,              JARED_MODE,        JARED_MODE_EVENT },
 };
 
 static state_duration_map_t state_duration_map[] =
@@ -220,6 +236,13 @@ void lights_all_off(void)
     return;
 }
 
+void lightOn_only(uint8_t lightCode)
+{
+    lights_all_off();
+    ON(lightCode);
+}
+
+
 void start_CARS_GO(void)
 {
     ON(LED_CAR_GREEN);
@@ -299,3 +322,40 @@ void cautionLightsON(void)
     ON(LED_CAR_YELLOW);
     ON(LED_PED_RED);
 }
+
+void start_JARED_MODE(void)
+{
+    lights_all_off();
+    start_interval_action(
+        jared1,
+        jared2,
+        100,
+        &jaredModeHandle);
+}
+void stop_JARED_MODE(void)
+{
+    stop_interval_action(jaredModeHandle);
+    lights_all_off();
+}
+
+
+void jared1(void)
+{
+    lightOn_only(LED_CAR_GREEN);
+    DELAY(100);
+    lightOn_only(LED_CAR_YELLOW);
+    DELAY(100);
+    lightOn_only(LED_CAR_RED);
+    DELAY(100);
+    lightOn_only(LED_PED_RED);
+}
+
+void jared2(void)
+{
+    lightOn_only(LED_PED_GREEN);
+    DELAY(100);
+    lightOn_only(LED_CAR_RED);
+    DELAY(100);
+    lightOn_only(LED_CAR_YELLOW);
+}
+

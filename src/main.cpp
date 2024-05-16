@@ -12,6 +12,10 @@ void ble_data_received(int data)
   {
     traffic_light_send_event(NORMAL_MODE_EVENT);
   }
+  else if (data == 7)
+  {
+    traffic_light_send_event(JARED_MODE_EVENT);
+  }
   else
   {
     traffic_light_send_event(CAUTION_MODE_EVENT);

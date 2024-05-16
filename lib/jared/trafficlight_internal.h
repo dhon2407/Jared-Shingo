@@ -12,6 +12,7 @@
 #define ON(light)   digitalWrite(light, HIGH)
 #define OFF(light)  digitalWrite(light, LOW)
 #define MAIN_LOOP_TICK (10  / portTICK_PERIOD_MS)
+#define DELAY(ms) vTaskDelay(ms / portTICK_PERIOD_MS)
 
 #ifdef __cplusplus
 extern "C" {
@@ -25,6 +26,7 @@ typedef enum {
     PED_STOPPING,
     PED_STOP,
     OFF,
+    JARED_MODE,
     CAUTION_MODE,
     UNKNOWN,
 } traffic_state_t;
@@ -69,13 +71,18 @@ static void start_PED_GO(void);
 static void start_PED_STOPPING(void);
 static void start_PED_STOP(void);
 static void start_CAUTION_MODE(void);
-static void start_CAUTION_MODE(void);
 
 static void end_PED_STOPPING(void);
 static void end_CAUTION_MODE(void);
 
 static void cautionLightsON(void);
 static void lights_all_off(void);
+static void lightOn_only(uint8_t);
+
+static void start_JARED_MODE(void);
+static void stop_JARED_MODE(void);
+static void jared1(void);
+static void jared2(void);
 
 
 #ifdef __cplusplus

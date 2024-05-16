@@ -24,8 +24,8 @@ typedef void (*on_start_state_callback)(void);
 typedef struct
 {
     traffic_state_t state;
-    on_start_state_callback start_action;
-} start_state_map_t;
+    on_start_state_callback action;
+} state_action_map_t;
 
 typedef struct
 {
@@ -65,9 +65,13 @@ static void start_PED_GO(void);
 static void start_PED_STOPPING(void);
 static void start_PED_STOP(void);
 static void start_CAUTION_MODE(void);
+
+static void end_PED_STOPPING(void);
+static void end_CAUTION_MODE(void);
+
 static void cautionLightsON(void);
 
-static start_state_map_t start_actions[] =
+static state_action_map_t start_actions[] =
 {
     { CARS_GO,          start_CARS_GO },
     { CARS_STOPPING,    start_CARS_STOPPING },
@@ -76,6 +80,12 @@ static start_state_map_t start_actions[] =
     { PED_STOPPING,     start_PED_STOPPING },
     { PED_STOP,         start_PED_STOP },
     { CAUTION_MODE,     start_CAUTION_MODE },
+};
+
+static state_action_map_t end_actions[] =
+{
+    { PED_STOPPING,     end_PED_STOPPING },
+    { CAUTION_MODE,     end_CAUTION_MODE },
 };
 
 static state_event_map_t state_event_map[] =
@@ -102,7 +112,7 @@ static state_duration_map_t state_duration_map[] =
 
 /*======================= STATIC FUNCTIONS =======================*/
 static void main_traffic_light_loop(void *params);
-static traffic_state_t changeState(traffic_state_t current_state);
+static traffic_state_t changeState(traffic_state_t targetState, traffic_state_t currentState);
 static traffic_state_t process_state(traffic_state_t current_state, process_data_t data);
 static void lights_all_off(void);
 
@@ -153,7 +163,7 @@ void main_traffic_light_loop(void *params)
 
     /* Start at CARS_GO state */
     startTime = millis();
-    g_current_state = changeState(CARS_GO);
+    g_current_state = changeState(CARS_GO, UNKNOWN);
 
     traffic_light_running = true;
     while (traffic_light_running == true)
@@ -165,7 +175,7 @@ void main_traffic_light_loop(void *params)
         if (next_state != g_current_state)
         {
             startTime = millis();
-            g_current_state = changeState(next_state);
+            g_current_state = changeState(next_state, g_current_state);
         }
         //Event is consumed
         current_data.event = NO_EVENT;
@@ -184,24 +194,37 @@ void main_traffic_light_loop(void *params)
     }
 }
 
-traffic_state_t changeState(traffic_state_t targetState)
+traffic_state_t changeState(traffic_state_t targetState, traffic_state_t currentState)
 {
-    size_t actionsSize = sizeof(start_actions) / sizeof(start_actions[0]);
+    size_t startActionsSize = sizeof(start_actions) / sizeof(start_actions[0]);
+    size_t endActionsSize = sizeof(end_actions) / sizeof(end_actions[0]);
     size_t index = 0U;
 
-    for (index = 0; index < actionsSize; index++)
+    for (index = 0; index < endActionsSize; index++)
     {
-        if (start_actions[index].state == targetState)
+        if (end_actions[index].state == currentState)
         {
-            if (start_actions[index].start_action)
+            if (end_actions[index].action)
             {
-                start_actions[index].start_action();
+                end_actions[index].action();
             }
-            return targetState;
+            break;
         }
     }
 
-    assert(0);
+    for (index = 0; index < startActionsSize; index++)
+    {
+        if (start_actions[index].state == targetState)
+        {
+            if (start_actions[index].action)
+            {
+                start_actions[index].action();
+            }
+            break;
+        }
+    }
+
+    return targetState;
 }
 
 traffic_state_t process_state(traffic_state_t current_state, process_data_t data)
@@ -253,7 +276,6 @@ void lights_all_off(void)
 
 void start_CARS_GO(void)
 {
-    stop_interval_action(cautionModeHandle); //TODO add on exit state functions;
     ON(LED_CAR_GREEN);
     OFF(LED_CAR_YELLOW);
     OFF(LED_CAR_RED);
@@ -263,7 +285,6 @@ void start_CARS_GO(void)
 
 void start_CARS_STOPPING(void)
 {
-    stop_interval_action(cautionModeHandle); //TODO add on exit state functions;
     OFF(LED_CAR_GREEN);
     ON(LED_CAR_YELLOW);
     OFF(LED_CAR_RED);
@@ -272,7 +293,6 @@ void start_CARS_STOPPING(void)
 }
 void start_CARS_STOP(void)
 {
-    stop_interval_action(cautionModeHandle); //TODO add on exit state functions;
     OFF(LED_CAR_GREEN);
     OFF(LED_CAR_YELLOW);
     ON(LED_CAR_RED);
@@ -281,16 +301,15 @@ void start_CARS_STOP(void)
 }
 void start_PED_GO(void)
 {
-    stop_interval_action(cautionModeHandle); //TODO add on exit state functions;
     OFF(LED_CAR_GREEN);
     OFF(LED_CAR_YELLOW);
     ON(LED_CAR_RED);
     OFF(LED_PED_RED);
     ON(LED_PED_GREEN);
 }
+
 void start_PED_STOPPING(void)
 {
-    stop_interval_action(cautionModeHandle); //TODO add on exit state functions;
     OFF(LED_CAR_GREEN);
     OFF(LED_CAR_YELLOW);
     ON(LED_CAR_RED);
@@ -298,15 +317,19 @@ void start_PED_STOPPING(void)
 
     start_blink(LED_PED_GREEN, 300, &blinkingPedWalkHandle);
 }
+void end_PED_STOPPING(void)
+{
+    stop_blink(blinkingPedWalkHandle);
+}
+
 void start_PED_STOP(void)
 {
-    stop_interval_action(cautionModeHandle); //TODO add on exit state functions;
     OFF(LED_CAR_GREEN);
     OFF(LED_CAR_YELLOW);
     ON(LED_CAR_RED);
 
     ON(LED_PED_RED);
-    stop_blink(blinkingPedWalkHandle);
+    OFF(LED_PED_GREEN);
 }
 
 void start_CAUTION_MODE(void)
@@ -317,6 +340,11 @@ void start_CAUTION_MODE(void)
         lights_all_off,
         400,
         &cautionModeHandle);
+}
+
+void end_CAUTION_MODE(void)
+{
+    stop_interval_action(cautionModeHandle);
 }
 
 void cautionLightsON(void)

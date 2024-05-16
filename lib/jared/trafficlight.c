@@ -65,11 +65,13 @@ static void start_PED_GO(void);
 static void start_PED_STOPPING(void);
 static void start_PED_STOP(void);
 static void start_CAUTION_MODE(void);
+static void start_CAUTION_MODE(void);
 
 static void end_PED_STOPPING(void);
 static void end_CAUTION_MODE(void);
 
 static void cautionLightsON(void);
+static void lights_all_off(void);
 
 static state_action_map_t start_actions[] =
 {
@@ -80,6 +82,7 @@ static state_action_map_t start_actions[] =
     { PED_STOPPING,     start_PED_STOPPING },
     { PED_STOP,         start_PED_STOP },
     { CAUTION_MODE,     start_CAUTION_MODE },
+    { OFF,              lights_all_off },
 };
 
 static state_action_map_t end_actions[] =
@@ -97,16 +100,26 @@ static state_event_map_t state_event_map[] =
     { PED_STOPPING,     CAUTION_MODE,   CAUTION_MODE_EVENT },
     { PED_STOP,         CAUTION_MODE,   CAUTION_MODE_EVENT },
     { CAUTION_MODE,     CARS_GO,        NORMAL_MODE_EVENT },
+
+    { CARS_GO,          OFF,            TURNOFF_EVENT },
+    { CARS_STOPPING,    OFF,            TURNOFF_EVENT },
+    { CARS_STOP,        OFF,            TURNOFF_EVENT },
+    { PED_GO,           OFF,            TURNOFF_EVENT },
+    { PED_STOPPING,     OFF,            TURNOFF_EVENT },
+    { PED_STOP,         OFF,            TURNOFF_EVENT },
+    { CAUTION_MODE,     OFF,            TURNOFF_EVENT },
+
+    { OFF,              CARS_GO,        NORMAL_MODE_EVENT },
 };
 
 static state_duration_map_t state_duration_map[] =
 {
-    { CARS_GO, CARS_STOPPING, 5000 },
-    { CARS_STOPPING, CARS_STOP, 2000 },
-    { CARS_STOP, PED_GO, 1000 },
-    { PED_GO, PED_STOPPING, 5000 },
-    { PED_STOPPING, PED_STOP, 3000 },
-    { PED_STOP, CARS_GO, 2000 },
+    { CARS_GO,          CARS_STOPPING,  5000 },
+    { CARS_STOPPING,    CARS_STOP,      2000 },
+    { CARS_STOP,        PED_GO,         1000 },
+    { PED_GO,           PED_STOPPING,   5000 },
+    { PED_STOPPING,     PED_STOP,       3000 },
+    { PED_STOP,         CARS_GO,        2000 },
 };
 
 
@@ -114,7 +127,6 @@ static state_duration_map_t state_duration_map[] =
 static void main_traffic_light_loop(void *params);
 static traffic_state_t changeState(traffic_state_t targetState, traffic_state_t currentState);
 static traffic_state_t process_state(traffic_state_t current_state, process_data_t data);
-static void lights_all_off(void);
 
 void traffic_light_init(void)
 {

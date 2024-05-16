@@ -15,6 +15,7 @@ typedef enum {
     NO_EVENT,
     NORMAL_MODE_EVENT,
     CAUTION_MODE_EVENT,
+    TURNOFF_EVENT,
     UNKNOWN_EVENT,
 } traffic_event_t;
 

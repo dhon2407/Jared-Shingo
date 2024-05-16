@@ -12,5 +12,8 @@ void setup()
 
 void loop()
 {
-  
+  delay(30*1000);
+  traffic_light_send_event(CAUTION_MODE_EVENT);
+  delay(30*1000);
+  traffic_light_send_event(NORMAL_MODE_EVENT);
 }

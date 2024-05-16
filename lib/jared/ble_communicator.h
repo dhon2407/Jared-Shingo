@@ -8,7 +8,9 @@
 extern "C" {
 #endif
 
-void ble_comm_init(void);
+typedef void (*data_callback)(int);
+
+void ble_comm_init(data_callback onChangeValue);
 void ble_comm_deinit(void);
 
 

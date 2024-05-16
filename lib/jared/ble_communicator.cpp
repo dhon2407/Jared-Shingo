@@ -27,6 +27,9 @@ static bool oldDeviceConnected = false;
 static void ble_connectingMode(bool connected);
 static void main_ble_loop(void *params);
 
+static int writeData = 0;
+static data_callback onDataCallback = NULL;
+
 class MyServerCallbacks: public BLEServerCallbacks
 {
     void onConnect(BLEServer* pServer)
@@ -47,29 +50,24 @@ class MyCallbacks: public BLECharacteristicCallbacks
 {
     void onWrite(BLECharacteristic *pCharacteristic)
     {
-      std::string value = pCharacteristic->getValue();
-
-      if (value.length() > 0)
+      writeData = *((int*)pCharacteristic->getData());
+      if (onDataCallback != NULL)
       {
-        Serial.println("*********");
-        Serial.print("New value: ");
-        for (int i = 0; i < value.length(); i++)
-          Serial.print(value[i]);
-
-        Serial.println();
-        Serial.println("*********");
+         onDataCallback(writeData);
       }
     }
 };
 
 
-void ble_comm_init(void)
+void ble_comm_init(data_callback clientCallback)
 {
     pinMode(LED_INDICATOR_CONNECTED, OUTPUT);
     pinMode(LED_INDICATOR_ERROR, OUTPUT);
 
     BLEDevice::init("Jared Shingou");
     Serial.begin(115200);
+
+    onDataCallback = clientCallback;
 
     // Create the BLE Server
     pServer = BLEDevice::createServer();
@@ -87,7 +85,7 @@ void ble_comm_init(void)
                         );
 
     pCharacteristic->setCallbacks(new MyCallbacks());
-    pCharacteristic->setValue("Initial value..");
+    pCharacteristic->setValue(writeData);
 
     // Start the service
     pService->start();

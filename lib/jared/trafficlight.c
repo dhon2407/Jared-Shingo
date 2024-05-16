@@ -109,7 +109,7 @@ void main_traffic_light_loop(void *params)
 
     /* Start at CARS_GO state */
     startTime = millis();
-    g_current_state = changeState(CARS_GO, UNKNOWN);
+    g_current_state = changeState(OFF, UNKNOWN);
 
     traffic_light_running = true;
     while (traffic_light_running == true)

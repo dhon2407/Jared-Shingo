@@ -8,6 +8,7 @@
         "algorithm": "c",
         "bledevice.h": "c",
         "arduino.h": "c",
-        "common_functions.h": "c"
+        "common_functions.h": "c",
+        "trafficlight_internal.h": "c"
     }
 }

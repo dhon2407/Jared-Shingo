@@ -1,52 +1,7 @@
 #include <Arduino.h>
 
-#include "trafficlight.h"
+#include "trafficlight_internal.h"
 #include "common_functions.h"
-
-#define ON(light)   digitalWrite(light, HIGH)
-#define OFF(light)  digitalWrite(light, LOW)
-#define MAIN_LOOP_TICK (10  / portTICK_PERIOD_MS)
-
-typedef enum {
-    CARS_GO,
-    CARS_STOPPING,
-    CARS_STOP,
-    PED_GO,
-    PED_STOPPING,
-    PED_STOP,
-    OFF,
-    CAUTION_MODE,
-    UNKNOWN,
-} traffic_state_t;
-
-typedef void (*on_start_state_callback)(void);
-
-typedef struct
-{
-    traffic_state_t state;
-    on_start_state_callback action;
-} state_action_map_t;
-
-typedef struct
-{
-    traffic_state_t current_state;
-    traffic_state_t next_state;
-    unsigned long state_duration_millis;
-} state_duration_map_t;
-
-typedef struct
-{
-    traffic_state_t current_state;
-    traffic_state_t next_state;
-    traffic_event_t event;
-} state_event_map_t;
-
-typedef struct
-{
-    traffic_event_t event;
-    unsigned long timeLapsed;
-} process_data_t;
-
 
 static traffic_state_t g_current_state = UNKNOWN;
 static volatile bool traffic_light_running = false;
@@ -54,24 +9,8 @@ static TaskHandle_t main_taskHandle;
 static task_handle_t *blinkingPedWalkHandle = NULL;
 static task_handle_t *cautionModeHandle = NULL;
 
-
 static SemaphoreHandle_t eventMutex = NULL;
 static volatile process_data_t current_data = { NO_EVENT, 0 };
-
-static void start_CARS_GO(void);
-static void start_CARS_STOPPING(void);
-static void start_CARS_STOP(void);
-static void start_PED_GO(void);
-static void start_PED_STOPPING(void);
-static void start_PED_STOP(void);
-static void start_CAUTION_MODE(void);
-static void start_CAUTION_MODE(void);
-
-static void end_PED_STOPPING(void);
-static void end_CAUTION_MODE(void);
-
-static void cautionLightsON(void);
-static void lights_all_off(void);
 
 static state_action_map_t start_actions[] =
 {
@@ -122,11 +61,6 @@ static state_duration_map_t state_duration_map[] =
     { PED_STOP,         CARS_GO,        2000 },
 };
 
-
-/*======================= STATIC FUNCTIONS =======================*/
-static void main_traffic_light_loop(void *params);
-static traffic_state_t changeState(traffic_state_t targetState, traffic_state_t currentState);
-static traffic_state_t process_state(traffic_state_t current_state, process_data_t data);
 
 void traffic_light_init(void)
 {
@@ -331,6 +265,7 @@ void start_PED_STOPPING(void)
 }
 void end_PED_STOPPING(void)
 {
+    OFF(LED_PED_GREEN);
     stop_blink(blinkingPedWalkHandle);
 }
 

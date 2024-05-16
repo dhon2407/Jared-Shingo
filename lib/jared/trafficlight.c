@@ -36,7 +36,7 @@ typedef struct
 static traffic_state_t g_current_state = UNKNOWN;
 static volatile bool traffic_light_running = false;
 static TaskHandle_t main_taskHandle;
-static blink_handle_t *blinkingPedWalkHandle = NULL;
+static task_handle_t *blinkingPedWalkHandle = NULL;
 
 static void start_CARS_GO(void);
 static void start_CARS_STOPPING(void);

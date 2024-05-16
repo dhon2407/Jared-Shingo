@@ -14,7 +14,7 @@
 #define SERVICE_UUID        "4fafc201-1fb5-459e-8fcc-c5c9c331914b"
 #define CHARACTERISTIC_UUID "beb5483e-36e1-4688-b7f5-ea07361b26a8"
 
-static blink_handle_t *connectionBlinkHandle = NULL;
+static task_handle_t *connectionBlinkHandle = NULL;
 
 static TaskHandle_t main_loop_task_handle = NULL;
 static volatile bool main_loop_active = false;
@@ -23,7 +23,6 @@ static BLEServer* pServer = NULL;
 static BLECharacteristic* pCharacteristic = NULL;
 static volatile bool deviceConnected = false;
 static bool oldDeviceConnected = false;
-static uint32_t value = 0;
 
 static void ble_connectingMode(bool connected);
 static void main_ble_loop(void *params);
@@ -69,7 +68,7 @@ void ble_comm_init(void)
     pinMode(LED_INDICATOR_CONNECTED, OUTPUT);
     pinMode(LED_INDICATOR_ERROR, OUTPUT);
 
-    BLEDevice::init("Jared Shingou - Write");
+    BLEDevice::init("Jared Shingou");
     Serial.begin(115200);
 
     // Create the BLE Server
@@ -87,7 +86,6 @@ void ble_comm_init(void)
                         BLECharacteristic::PROPERTY_WRITE
                         );
 
-    pCharacteristic->addDescriptor(new BLE2902());
     pCharacteristic->setCallbacks(new MyCallbacks());
     pCharacteristic->setValue("Initial value..");
 
@@ -129,13 +127,15 @@ static void main_ble_loop(void *params)
     while (main_loop_active == true)
     {
       // disconnecting
-      if (!deviceConnected && oldDeviceConnected) {
+      if (!deviceConnected && oldDeviceConnected)
+      {
           vTaskDelay(1000 / portTICK_PERIOD_MS); // give the bluetooth stack the chance to get things ready
           pServer->startAdvertising(); // restart advertising
           oldDeviceConnected = deviceConnected;
       }
       // connecting
-      if (deviceConnected && !oldDeviceConnected) {
+      if (deviceConnected && !oldDeviceConnected)
+      {
           // do stuff here on connecting
           oldDeviceConnected = deviceConnected;
       }

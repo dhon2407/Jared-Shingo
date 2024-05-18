@@ -24,6 +24,7 @@ static state_action_map_t start_actions[] =
     { CAUTION_MODE,     start_CAUTION_MODE },
     { OFF,              lights_all_off },
     { JARED_MODE,       start_JARED_MODE },
+    { MANUAL_MODE,      start_MANUAL_MODE },
 };
 
 static state_action_map_t end_actions[] =
@@ -31,11 +32,15 @@ static state_action_map_t end_actions[] =
     { PED_STOPPING,     end_PED_STOPPING },
     { CAUTION_MODE,     end_CAUTION_MODE },
     { JARED_MODE,       stop_JARED_MODE },
+    { MANUAL_MODE,      stop_MANUAL_MODE },
 };
 
 static state_event_map_t state_event_map[] =
 {
     { OFF,              CARS_GO,        NORMAL_MODE_EVENT },
+    { CAUTION_MODE,     CARS_GO,        NORMAL_MODE_EVENT },
+    { JARED_MODE,       CARS_GO,        NORMAL_MODE_EVENT },
+    { MANUAL_MODE,      CARS_GO,        NORMAL_MODE_EVENT },
 
     { CARS_GO,          CAUTION_MODE,   CAUTION_MODE_EVENT },
     { CARS_STOPPING,    CAUTION_MODE,   CAUTION_MODE_EVENT },
@@ -44,9 +49,7 @@ static state_event_map_t state_event_map[] =
     { PED_STOPPING,     CAUTION_MODE,   CAUTION_MODE_EVENT },
     { PED_STOP,         CAUTION_MODE,   CAUTION_MODE_EVENT },
     { JARED_MODE,       CAUTION_MODE,   CAUTION_MODE_EVENT },
-    
-    { CAUTION_MODE,     CARS_GO,        NORMAL_MODE_EVENT },
-    { JARED_MODE,       CARS_GO,        NORMAL_MODE_EVENT },
+    { MANUAL_MODE,      CAUTION_MODE,   CAUTION_MODE_EVENT },
 
     { CARS_GO,          OFF,            TURNOFF_EVENT },
     { CARS_STOPPING,    OFF,            TURNOFF_EVENT },
@@ -56,6 +59,7 @@ static state_event_map_t state_event_map[] =
     { PED_STOP,         OFF,            TURNOFF_EVENT },
     { CAUTION_MODE,     OFF,            TURNOFF_EVENT },
     { JARED_MODE,       OFF,            TURNOFF_EVENT },
+    { MANUAL_MODE,      OFF,            TURNOFF_EVENT },
 
     { CARS_GO,          JARED_MODE,        JARED_MODE_EVENT },
     { CARS_STOPPING,    JARED_MODE,        JARED_MODE_EVENT },
@@ -64,7 +68,18 @@ static state_event_map_t state_event_map[] =
     { PED_STOPPING,     JARED_MODE,        JARED_MODE_EVENT },
     { PED_STOP,         JARED_MODE,        JARED_MODE_EVENT },
     { CAUTION_MODE,     JARED_MODE,        JARED_MODE_EVENT },
+    { MANUAL_MODE,      JARED_MODE,        JARED_MODE_EVENT },
     { OFF,              JARED_MODE,        JARED_MODE_EVENT },
+
+    { CARS_GO,          MANUAL_MODE,       MANUAL_MODE_EVENT },
+    { CARS_STOPPING,    MANUAL_MODE,       MANUAL_MODE_EVENT },
+    { CARS_STOP,        MANUAL_MODE,       MANUAL_MODE_EVENT },
+    { PED_GO,           MANUAL_MODE,       MANUAL_MODE_EVENT },
+    { PED_STOPPING,     MANUAL_MODE,       MANUAL_MODE_EVENT },
+    { PED_STOP,         MANUAL_MODE,       MANUAL_MODE_EVENT },
+    { CAUTION_MODE,     MANUAL_MODE,       MANUAL_MODE_EVENT },
+    { JARED_MODE,       MANUAL_MODE,       MANUAL_MODE_EVENT },
+    { OFF,              MANUAL_MODE,       MANUAL_MODE_EVENT },
 };
 
 static state_duration_map_t state_duration_map[] =
@@ -113,6 +128,13 @@ void traffic_light_send_event(traffic_event_t event)
     MUTEX_LOCK(eventMutex);
     current_data.event = event;
     MUTEX_UNLOCK(eventMutex);
+}
+
+void traffic_light_send_manual_data(int data)
+{
+    if (g_current_state != MANUAL_MODE) return;
+
+    changeLights(data);
 }
 
 /*======================= STATIC FUNCTIONS =======================*/
@@ -225,11 +247,34 @@ traffic_state_t process_state(traffic_state_t current_state, process_data_t data
     return current_state;
 }
 
+void changeLights(int data)
+{
+// const RED_LIGHT     = 1;  // 00000001 (1)
+// const YELLOW_LIGHT  = 2;  // 00000010 (2)
+// const GREEN_LIGHT   = 4;  // 00000100 (4)
+// const WALK_LIGHT    = 8;  // 00000100 (8)
+// const STOP_LIGHT    = 16; // 00001000 (16)
+
+    setLight(LED_CAR_RED, data & 0x01);
+    setLight(LED_CAR_YELLOW, data & 0x02);
+    setLight(LED_CAR_GREEN, data & 0x04);
+    setLight(LED_PED_RED, data & 0x08);
+    setLight(LED_PED_GREEN, data & 0x10);
+
+    return;
+}
+
+void setLight(uint8_t lightCode, bool isOn)
+{
+    if (isOn) ON(lightCode);
+    else OFF(lightCode);
+}
+
 void lights_all_off(void)
 {
-    OFF(LED_CAR_GREEN);
-    OFF(LED_CAR_YELLOW);
     OFF(LED_CAR_RED);
+    OFF(LED_CAR_YELLOW);
+    OFF(LED_CAR_GREEN);
     OFF(LED_PED_RED);
     OFF(LED_PED_GREEN);
 
@@ -241,7 +286,6 @@ void lightOn_only(uint8_t lightCode)
     lights_all_off();
     ON(lightCode);
 }
-
 
 void start_CARS_GO(void)
 {
@@ -311,7 +355,6 @@ void start_CAUTION_MODE(void)
         400,
         &cautionModeHandle);
 }
-
 void end_CAUTION_MODE(void)
 {
     stop_interval_action(cautionModeHandle);
@@ -338,7 +381,6 @@ void stop_JARED_MODE(void)
     lights_all_off();
 }
 
-
 void jared1(void)
 {
     lightOn_only(LED_CAR_GREEN);
@@ -357,5 +399,14 @@ void jared2(void)
     lightOn_only(LED_CAR_RED);
     DELAY(100);
     lightOn_only(LED_CAR_YELLOW);
+}
+
+void start_MANUAL_MODE(void)
+{
+    lights_all_off();
+}
+void stop_MANUAL_MODE(void)
+{
+    lights_all_off();
 }
 

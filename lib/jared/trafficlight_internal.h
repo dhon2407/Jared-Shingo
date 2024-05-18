@@ -2,6 +2,7 @@
 #define __TRAFFICLIGHT_INTERNAL_H__
 
 #include "trafficlight.h"
+#include <stdbool.h>
 
 #define LED_CAR_RED D8
 #define LED_CAR_YELLOW D9
@@ -28,6 +29,7 @@ typedef enum {
     OFF,
     JARED_MODE,
     CAUTION_MODE,
+    MANUAL_MODE,
     UNKNOWN,
 } traffic_state_t;
 
@@ -63,6 +65,8 @@ typedef struct
 static void main_traffic_light_loop(void *params);
 static traffic_state_t changeState(traffic_state_t targetState, traffic_state_t currentState);
 static traffic_state_t process_state(traffic_state_t current_state, process_data_t data);
+static void changeLights(int data);
+static void setLight(uint8_t lightCode, bool isOn);
 
 static void start_CARS_GO(void);
 static void start_CARS_STOPPING(void);
@@ -83,6 +87,9 @@ static void start_JARED_MODE(void);
 static void stop_JARED_MODE(void);
 static void jared1(void);
 static void jared2(void);
+
+static void start_MANUAL_MODE(void);
+static void stop_MANUAL_MODE(void);
 
 
 #ifdef __cplusplus

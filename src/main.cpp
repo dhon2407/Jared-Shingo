@@ -1,25 +1,63 @@
 #include <Arduino.h>
 #include <ble_communicator.h>
 #include <trafficlight.h>
+#include <stdbool.h>
+
+#define ACTION_TURNOFF 0
+#define ACTION_NORMALMODE 1
+#define ACTION_JAREDMODE 2
+#define ACTION_WARNINGMODE 3
+#define ACTION_MANUALON 4
+#define ACTION_MANUALOFF 17
+
+
+typedef struct {
+  const int data;
+  const traffic_event_t event;
+} event_data_pair_t;
+
+static const event_data_pair_t event_data_list[] =
+{
+  { ACTION_TURNOFF,     TURNOFF_EVENT },
+  { ACTION_NORMALMODE,  NORMAL_MODE_EVENT },
+  { ACTION_JAREDMODE,   JARED_MODE_EVENT },
+  { ACTION_WARNINGMODE, CAUTION_MODE_EVENT },
+  { ACTION_MANUALON,    MANUAL_MODE_EVENT },
+};
+
+static const size_t size_tevent_data_list_size = sizeof(event_data_list) / sizeof(event_data_list[0]);
+
+static bool manual_mode = false;
+
 
 void ble_data_received(int data)
 {
-  if (data == 0)
+  size_t index = 0;
+
+  if (manual_mode == true)
   {
-    traffic_light_send_event(TURNOFF_EVENT);
+    if (data == ACTION_MANUALOFF)
+    {
+      traffic_light_send_event(NORMAL_MODE_EVENT);
+      manual_mode = false;
+      return;
+    }
+
+    traffic_light_send_manual_data(data);
+    return;
   }
-  else if (data == 1)
+
+  for (index = 0; index < size_tevent_data_list_size; index++)
   {
-    traffic_light_send_event(NORMAL_MODE_EVENT);
+    if (data == event_data_list[index].data)
+    {
+      traffic_light_send_event(event_data_list[index].event);
+      manual_mode = event_data_list[index].event == MANUAL_MODE_EVENT;
+      break;
+    }
   }
-  else if (data == 7)
-  {
-    traffic_light_send_event(JARED_MODE_EVENT);
-  }
-  else
-  {
-    traffic_light_send_event(CAUTION_MODE_EVENT);
-  }
+
+  return;
 }
 
 void setup()

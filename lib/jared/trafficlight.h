@@ -11,6 +11,7 @@ typedef enum {
     CAUTION_MODE_EVENT,
     TURNOFF_EVENT,
     JARED_MODE_EVENT,
+    MANUAL_MODE_EVENT,
     UNKNOWN_EVENT,
 } traffic_event_t;
 
@@ -18,6 +19,7 @@ void traffic_light_init(void);
 void traffic_light_start(void);
 void traffic_light_stop(void);
 void traffic_light_send_event(traffic_event_t event);
+void traffic_light_send_manual_data(int data);
 
 
 #ifdef __cplusplus

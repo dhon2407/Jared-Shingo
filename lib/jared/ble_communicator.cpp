@@ -111,7 +111,7 @@ void ble_connectingMode(bool connected)
     if (connected == true)
     {
       stop_blink(connectionBlinkHandle);
-      ON(LED_INDICATOR_CONNECTED);
+      OFF(LED_INDICATOR_CONNECTED);
     }
     else
     {
